@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  BLOCKED
+  PRO
+}
+
+enum PaymentType {
+  MANUAL
+  PAYMENT_GATEWAY
+}
+
+enum MoneyStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum WalletFlowStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  TERMINATED
+}
+
+enum RequestStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id                String              @id @default(uuid()) @map("_id")
+  email             String              @unique
+  name              String
+  number            String
+  password          String
+  totalMoney        Int                 @default(0)
+  role              UserRole            @default(USER)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  paymentType       PaymentType         @default(MANUAL)
+  money             Money[]
+  withdrawalRequest WithdrawalRequest[]
+  Order             Order[]
+  Product           Product[]
+  News              News[]
+  ProUser           ProUser[]
+  Feedback          Feedback[]
+  BankDetails       BankDetails[]
+  WalletFlow        WalletFlow[]
+  Support           Support[]
+  Settings          Settings[]
+}
+
+model Settings {
+  id                String   @id @default(uuid()) @map("_id")
+  automaticVariable Boolean
+  userId            String
+  User              User     @relation(fields: [userId], references: [id])
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt
+}
+
+model BankDetails {
+  id             String   @id @default(uuid()) @map("_id")
+  public_id      String   @unique
+  secure_url     String
+  upiid          String
+  upinumber      String
+  accountDetails String
+  ifsccode       String
+  accountType    String
+  name           String
+  bankName       String
+  role           UserRole @default(ADMIN)
+  User           User     @relation(fields: [userId], references: [id])
+  userId         String
+  createdAt      DateTime @default(now()) @map("created_at")
+}
+
+model ProUser {
+  id           String  @id @default(uuid()) @map("_id")
+  amount_limit Int
+  products     Json
+  proRecharge  Boolean @default(false)
+  isRecharged  Boolean @default(false)
+  User         User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String  @unique
+}
+
+model Money {
+  id            String      @id @default(uuid()) @map("_id")
+  name          String
+  amount        String?
+  upiid         String
+  accountNumber String?
+  transactionId String      @unique
+  public_id     String      @unique
+  secure_url    String
+  reason        String?
+  status        MoneyStatus @default(PENDING)
+  User          User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  createdAt     DateTime    @default(now()) @map("created_at")
+}
+
+model WithdrawalRequest {
+  id              String        @id @default(uuid()) @map("_id")
+  userId          String
+  name            String
+  accountNumber   String
+  ifscCode        String
+  beneficiaryName String
+  withdrawAmount  String
+  transactionId   String?
+  secure_url      String?
+  public_id       String?
+  reason          String?
+  status          RequestStatus @default(PENDING)
+  User            User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt
+}
+
+model WalletFlow {
+  id        String           @id @default(uuid()) @map("_id")
+  moneyId   String           @unique
+  userId    String
+  user      User?            @relation(fields: [userId], references: [id])
+  amount    Int
+  purpose   String?
+  status    WalletFlowStatus @default(PENDING)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt
+}
+
+model Support {
+  id        String   @id @default(uuid()) @map("_id")
+  userId    String   @unique
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  link      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String?
+  User        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productName String   @unique
+  description String
+  price       Int
+  minProduct  Int
+  maxProduct  Int
+  stock       Int
+  sheetLink   String
+  sheetName   String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt
+  orderId     String?
+}
+
+model Order {
+  id        String      @id @default(uuid()) @map("_id")
+  orderId   String      @unique
+  name      String
+  userId    String
+  User      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products  Json
+  files     Json?
+  amount    Int
+  reason    String?
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt
+}
+
+model Feedback {
+  id               String   @id @default(uuid()) @map("_id")
+  orderId          String   @unique
+  feedback         String
+  reply            String?
+  userId           String?
+  public_id        String?  @unique
+  secure_url       String?
+  fileName         String?
+  reply_fileName   String?
+  reply_public_id  String?
+  reply_secure_url String?
+  replyStatus      Boolean  @default(false)
+  User             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt
+}
+
+model News {
+  id        String   @id @default(uuid()) @map("_id")
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+}
+
+
+model PaymentMetaData {
+  id            String     @id @default(uuid()) @map("_id")
+  authToken     String   
+  usersTypeTag  UserRole   @default(USER)
+  createdAt     DateTime   @default(now()) @map("created_at") 
+  updatedAt     DateTime   @updatedAt 
+  expiry        DateTime   
+}
