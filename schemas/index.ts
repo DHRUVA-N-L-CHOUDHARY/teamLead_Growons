@@ -391,6 +391,33 @@ export const ProductSchema = z.object({
   sheetName: z.coerce.string().nonempty("Sheet Name is required"),
 });
 
+export const AddTeamSchema = z.object({
+  teamName: z.string().min(1, "Team name is required"),
+  teamLeader: z.string().optional(),
+  amount: z.coerce.number(),
+  products: z
+    .array(
+      z.object({
+        name: z.string().min(1, { message: "Product Name is required" }),
+        minProduct: z.coerce
+          .number()
+          .min(1, { message: "Min product is required" })
+          .nonnegative(),
+        maxProduct: z.coerce
+          .number()
+          .min(1, {
+            message: "Max product must be greater than min product",
+          })
+          .nonnegative(),
+        price: z.coerce.number().nonnegative().min(1, {
+          message: "Price must be greater than zero",
+        }),
+      })
+    )
+    .optional(),
+  teamDescription: z.string().optional(),
+});
+
 export const OrderSchema = z.object({
   id: z.string(),
   products: z.array(
