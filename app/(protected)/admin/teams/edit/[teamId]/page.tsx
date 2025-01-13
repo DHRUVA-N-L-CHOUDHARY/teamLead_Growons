@@ -1,119 +1,138 @@
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertCircle, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getTeamDetails, saveTeamDetails, addMember, removeMember } from "@/actions/admin-editTeam";
 
-// Function to get team details and members
-async function getTeamDetails(teamId: string, userId: string) {
-  const team = await db.team.findUnique({
-    where: { id: teamId },
-    include: {
-      leader: true,
-      members: {
-        include: {
-          user: true,
-        },
-      },
-    },
-  });
-
-  if (!team) {
-    throw new Error("Team not found");
-  }
-
-  // Check if the user is an admin (admin role assumed to be present in user model)
-  const isAdmin = await db.user.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  }).then(user => user?.role === "ADMIN");
-
-  return { team, isAdmin };
+interface TeamMember {
+  userId: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  isLeader: boolean;
 }
 
-export default async function EditTeamPage({ params }: { params: { teamId: string } }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/auth/login");
-  }
+interface Team {
+  id: string;
+  name: string;
+  leaderId: string;
+  amount_limit: number;
+  leader: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  members: TeamMember[];
+}
 
+export default function EditTeamPage({ params }: { params: { teamId: string } }) {
+  const router = useRouter();
+  const [team, setTeam] = useState<Team | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { teamId } = params;
-  const { team, isAdmin } = await getTeamDetails(teamId, session.user.id);
 
-  // Handle form submission logic
+  useEffect(() => {
+    async function fetchTeamDetails() {
+      try {
+        const session = await fetch("/api/auth/session").then((res) => res.json());
+        if (!session?.user?.id) {
+          router.push("/auth/login");
+          return;
+        }
+
+        const { team, isAdmin } = await getTeamDetails(teamId, session.user.id);
+        setTeam(team);
+        setIsAdmin(isAdmin);
+      } catch (error) {
+        console.error("Failed to fetch team details:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTeamDetails();
+  }, [teamId, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get("name");
-    const amountLimit = formData.get("amountLimit");
-
+  
     try {
-      await db.team.update({
-        where: { id: teamId },
-        data: {
-          name: name as string,
-          amount_limit: parseFloat(amountLimit as string),
-        },
-      });
-    } catch (error) {
-      console.error("Error updating team:", error);
-      throw new Error("Error updating team: " + error.message);
-    }
-  };
-
-  // Handle removing a team member
-  const handleRemoveMember = async (userId: string) => {
-    try {
-      await db.team.update({
-        where: { id: teamId },
-        data: {
-          members: {
-            disconnect: {
-              userId,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error("Error removing member:", error);
-    }
-  };
-
-  // Handle adding a new member by email
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get("email") as string;
-
-    try {
-      // Check if the user exists
-      const user = await db.user.findUnique({
-        where: { email },
-      });
-
-      if (!user) {
-        throw new Error("User not found");
+      const name = formData.get("name") as string;
+      const amountLimit = formData.get("amountLimit") as string;
+  
+      // Validate fields
+      if (!name || name.trim() === "") {
+        throw new Error("Team name is required.");
       }
+  
+      if (!amountLimit || isNaN(Number(amountLimit)) || Number(amountLimit) < 0) {
+        throw new Error("Amount limit must be a valid positive number.");
+      }
+  
+      await saveTeamDetails(teamId, formData);
+      alert("Team details updated successfully!");
+      router.refresh();
+    } catch (error: any) {
+      alert(error.message || "An error occurred while saving changes.");
+    }
+  };
 
-      // Add the user to the team
-      await db.team.update({
-        where: { id: teamId },
-        data: {
-          members: {
-            connect: {
-              userId: user.id,
-            },
-          },
-        },
-      });
+  const handleAddMember = async () => {
+    try {
+      if (!newMemberEmail) {
+        alert("Please provide a valid email.");
+        return;
+      }
+      
+      // Call backend to add member by email
+      const response = await addMember(teamId, newMemberEmail);
+      if (response.success) {
+        alert("Member added successfully!, refresh to see changes");
+        setNewMemberEmail("");
+        setIsDialogOpen(false);
+        
+      } else {
+        alert("Failed to add member.");
+      }
     } catch (error) {
       console.error("Error adding member:", error);
-      throw new Error("Error adding member: " + error.message);
+      alert("Error adding member.");
     }
   };
+
+  const handleRemoveMember = async (userId: string) => {
+    try {
+      const response = await removeMember(teamId, userId);
+      if (response.success) {
+        alert("Member removed successfully!, refresh once to see changes");
+        // getTeamDetails(); // Refresh the team data
+      } else {
+        alert("Failed to remove member.");
+      }
+    } catch (error) {
+      console.error("Error removing member:", error);
+      alert("Error removing member.");
+    }
+  };
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!team) {
+    return <p>Team not found.</p>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -122,7 +141,7 @@ export default async function EditTeamPage({ params }: { params: { teamId: strin
           <CardTitle>Edit Team: {team.name}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6" >
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Team Name</Label>
               <Input
@@ -140,10 +159,10 @@ export default async function EditTeamPage({ params }: { params: { teamId: strin
                 id="amountLimit"
                 name="amountLimit"
                 type="number"
-                defaultValue={team.amount_limit || 0}
+                defaultValue={team.amount_limit}
                 className="w-full"
                 min="0"
-                step="0.01"
+                step="1"
                 required
               />
             </div>
@@ -170,7 +189,7 @@ export default async function EditTeamPage({ params }: { params: { teamId: strin
                 <td className="px-4 py-2">{member.user.email}</td>
                 {isAdmin && (
                   <td className="px-4 py-2">
-                    {member.userId === team.leaderId ? (
+                    {member.isLeader ? (
                       <span className="text-gray-500">Team Leader</span>
                     ) : (
                       <Button
@@ -187,27 +206,39 @@ export default async function EditTeamPage({ params }: { params: { teamId: strin
             ))}
           </tbody>
         </table>
+
+        {isAdmin && (
+          <div className="mt-4">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Add Member</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Member</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <Label htmlFor="newMemberEmail">Member Email</Label>
+                  <Input
+                    id="newMemberEmail"
+                    type="email"
+                    value={newMemberEmail}
+                    onChange={(e) => setNewMemberEmail(e.target.value)}
+                    placeholder="Enter member email"
+                    className="w-full"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddMember}>Add</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
-
-      {isAdmin && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold">Add Team Member</h3>
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Member Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="w-full"
-              />
-            </div>
-
-            <Button type="submit">Add Member</Button>
-          </form>
-        </div>
-      )}
     </div>
   );
 }
