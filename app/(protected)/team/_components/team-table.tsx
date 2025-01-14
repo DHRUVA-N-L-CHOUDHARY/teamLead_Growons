@@ -21,6 +21,7 @@ import { removeMember } from "@/actions/admin-editTeam";
 interface TeamMembersTableProps {
   teamId: string;
   searchParams: { page: string };
+  
 }
 
 const RemoveMemberButton = ({ teamId, userId }: { teamId: string; userId: string }) => {
@@ -69,11 +70,20 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
     take: pageSize,
   });
 
-  const products = await db.product.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+//   const products = await db.product.findMany({
+//     orderBy: {
+//       createdAt: "desc",
+//     },
+//   });
+    // find team products here
+    const products = await db.team.findFirst({
+        where: {
+            id: teamId
+        },
+        select: {
+            products: true
+        }
+    })
 
   revalidatePath(`/team/${teamId}`);
 
@@ -114,10 +124,10 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
               <TableCell>{member.user.email}</TableCell>
               <TableCell>{member.isLeader ? "Leader" : "Member"}</TableCell>
               <TableCell>{member.createdAt.toDateString()}</TableCell>
-              <TableCell>
+              {member.user.role!=="LEADER" &&  <TableCell>
                 <RemoveMemberButton teamId={teamId} userId={member.user.id} />
-              </TableCell>
-              {member.user.role !== "BLOCKED" && (
+              </TableCell>}
+              {member.user.role !== "BLOCKED" && member.user.role!== "LEADER" && (
                 <TableCell>
                   <ProUser
                     userId={member.user.id}

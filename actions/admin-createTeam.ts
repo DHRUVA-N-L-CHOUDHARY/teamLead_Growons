@@ -11,10 +11,8 @@ export async function createTeam(values: z.infer<typeof AddTeamSchema>) {
   try {
     // Get user details of the selected team leader
 
-    console.log(values);
     const leader = await getUserById(values.teamLeader);
 
-    console.log(leader)
     
     if (!leader) {
       return { error: "Selected team leader not found" };
@@ -31,7 +29,6 @@ export async function createTeam(values: z.infer<typeof AddTeamSchema>) {
       price: product.price
     }));
 
-    console.log("Formatted products - "+formattedProducts);
 
     // Create the team
     const team = await db.team.create({

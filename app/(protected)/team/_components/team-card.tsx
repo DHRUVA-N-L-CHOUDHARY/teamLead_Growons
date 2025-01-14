@@ -1,4 +1,3 @@
-// app/teams/components/team-card.tsx
 
 "use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

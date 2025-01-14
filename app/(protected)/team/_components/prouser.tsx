@@ -27,18 +27,29 @@ import { toast } from "sonner";
 import DowngradeToUser from "./downgrade";
 import { addProUser } from "@/actions/user-pro";
 
-// Simplified schema with only amount
+// Updated schema to parse the amount to a number
 const ProUserSchema = z.object({
   userId: z.string(),
-  amount: z.number().min(0, "Amount must be positive")
+  amount: z.string().transform((val, ctx) => {
+    const parsed = parseFloat(val);
+    if (isNaN(parsed)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Amount must be a valid number",
+      });
+      return z.NEVER;
+    }
+    return parsed;
+  }).refine((val) => val >= 0, "Amount must be positive")
 });
 
 type ProUserProps = {
   userId: string;
   role: "PRO" | "BLOCKED" | "ADMIN" | "USER";
+  products:any;
 };
 
-const ProUser = ({ userId, role }: ProUserProps) => {
+const ProUser = ({ userId, role, products }: ProUserProps) => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
 
@@ -46,17 +57,19 @@ const ProUser = ({ userId, role }: ProUserProps) => {
     resolver: zodResolver(ProUserSchema),
     defaultValues: {
       userId: userId,
-      amount: 0
+      amount: "0"
     },
   });
 
   const onSubmit = (values: z.infer<typeof ProUserSchema>) => {
     startTransition(() => {
+        values.products = products.products;
       addProUser(values).then((data) => {
         if (data?.error) {
+          setError(data.error);
           toast.error(data.error);
         }
-        if (data.success) {
+        if (data?.success) {
           toast.success(data.success);
           form.reset();
         }
@@ -96,6 +109,7 @@ const ProUser = ({ userId, role }: ProUserProps) => {
                             disabled={isPending}
                             placeholder="Enter the amount limit"
                             type="number"
+                            step="0.01"
                           />
                         </FormControl>
                         <FormMessage />
@@ -105,27 +119,13 @@ const ProUser = ({ userId, role }: ProUserProps) => {
                 </div>
                 <FormError message={error} />
                 <SheetFooter>
-                  {form.formState.errors || error ? (
-                    <Button
-                      type="submit"
-                      disabled={isPending}
-                      className="w-full"
-                    >
-                      Upgrade to pro
-                    </Button>
-                  ) : (
-                    <SheetFooter>
-                      <SheetClose asChild>
-                        <Button
-                          type="submit"
-                          disabled={isPending}
-                          className="w-full"
-                        >
-                          Upgrade to pro
-                        </Button>
-                      </SheetClose>
-                    </SheetFooter>
-                  )}
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="w-full"
+                  >
+                    Upgrade to pro
+                  </Button>
                 </SheetFooter>
               </form>
             </Form>
@@ -137,3 +137,4 @@ const ProUser = ({ userId, role }: ProUserProps) => {
 };
 
 export default ProUser;
+

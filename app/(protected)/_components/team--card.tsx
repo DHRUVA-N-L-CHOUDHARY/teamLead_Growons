@@ -29,12 +29,14 @@ const TeamCard = async () => {
     }
   };
 
+  if(team==null)return <></>
+
   return (
     <div className="flex flex-col mx-2 mt-5 w-full md:w-56 bg-gray-100 p-4 rounded-lg space-y-3">
       <div className="flex justify-between items-center">
         <span className="font-semibold">My Team</span>
         <Button variant="link" className="font-medium p-0" asChild>
-          <Link href={`/teams/${team.id}`}>Edit</Link>
+          <Link href={`/team/${team.id}`}>Edit</Link>
         </Button>
       </div>
       

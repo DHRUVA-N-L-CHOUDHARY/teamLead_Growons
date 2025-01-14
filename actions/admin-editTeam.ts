@@ -133,7 +133,7 @@ export async function saveTeamDetails(teamId: string, data: FormData) {
 export async function addMember(teamId: string, email: string) {
   try {
     const user = await db.user.findUnique({ where: { email } });
-    console.log(user)
+   
     if (!user) {
       throw new Error(`User with email "${email}" not found.`);
     }
@@ -154,7 +154,6 @@ export async function addMember(teamId: string, email: string) {
       },
     });
 
-    console.log("User created")
 
     return { message: `User with email "${email}" added to the team.`, success:true };
   } catch (error: any) {
@@ -173,7 +172,6 @@ export async function removeMember(teamId: string, userId: string) {
         },
       });
       
-    console.log(member)
 
     if (!member) {
       throw new Error(`Member with ID "${userId}" not found in the team.`);

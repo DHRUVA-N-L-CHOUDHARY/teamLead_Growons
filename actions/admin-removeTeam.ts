@@ -4,13 +4,25 @@ import { db } from "@/lib/db";
 
 export const deleteTeam = async (teamId: string) => {
   try {
-    console.log(teamId);
     
     const team = await db.team.findUnique({
       where: { id: teamId },
     });
 
-    console.log(team);
+    // find user_id of leader od this team
+    const leaderId = team?.leaderId;
+
+    // find user using leaderId and modify role from "LEADER" to "USER
+    await db.user.update({
+      where: {
+        id: leaderId,
+      },
+      data: {
+        role: "USER",
+      },
+    });
+
+
 
     if (!team) {
       throw new Error("Team not found.");
