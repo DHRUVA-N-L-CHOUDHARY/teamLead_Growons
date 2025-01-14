@@ -24,6 +24,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { AddTeamSchema } from "@/schemas";
+import { createTeam } from "@/actions/admin-createTeam";
 
 type FormValues = z.infer<typeof AddTeamSchema>;
 
@@ -68,22 +69,21 @@ const TeamForm = ({ users, products }: TeamProps) => {
       toast.error("All selected products must have a name");
       return;
     }
-
+  
     startTransition(() => {
-      //   createTeam(values).then((data) => {
-      //     if (data?.success) {
-      //       toast.success(data.success);
-      //       form.reset();
-      //       router.refresh();
-      //     }
-      //     if (data?.error) {
-      //       setError(data.error);
-      //       toast.error(data.error);
-      //     }
-      //   });
+      createTeam(values).then((data) => {
+        if (data?.success) {
+          toast.success(data.success);
+          form.reset();
+          router.refresh();
+        }
+        if (data?.error) {
+          setError(data.error);
+          toast.error(data.error);
+        }
+      });
     });
   };
-
   return (
     <Form {...form}>
       <form
@@ -101,7 +101,7 @@ const TeamForm = ({ users, products }: TeamProps) => {
                   placeholder="Enter team name"
                   {...field}
                   disabled={isPending}
-                  type="number"
+                  type="name"
                 />
               </FormControl>
               <FormMessage />

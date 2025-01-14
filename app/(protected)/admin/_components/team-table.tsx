@@ -13,7 +13,9 @@ import PaginationBar from "../../money/_components/PaginationBar";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import CopyButton from "@/components/shared/copy-button";
-
+import TeamEdit from "./team-edit";
+import ViewProductsDialog from "./view-products";
+import TeamRemove from "./team-remove";
 
 export const revalidate = 3600;
 
@@ -36,10 +38,13 @@ const TeamTable = async ({
       leaderId: true,
       leader:true,
       refCode: true,
+      products:true
     },
     skip: (currentPage - 1) * pageSize,
     take: pageSize,
   });
+
+  console.log(teams)
 
   return (
     <>
@@ -79,13 +84,13 @@ const TeamTable = async ({
                 </div>
               </TableCell>
               <TableCell>
-                {/* <ViewProductsDialog products={team.products} /> */}
+                <ViewProductsDialog products={team.products} />
               </TableCell>
               <TableCell>
-                {/* <TeamEdit teamId={team.id} /> */}
+                <TeamEdit teamId={team.id} />
               </TableCell>
               <TableCell>
-                {/* <TeamRemove teamId={team.id} /> */}
+                <TeamRemove teamId={team.id} />
               </TableCell>
             </TableRow>
           ))}

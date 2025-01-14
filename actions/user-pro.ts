@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import * as z from "zod";
 
 export const addProUser = async (values: z.infer<typeof ProUserSchema>) => {
+  console.log(values);
   const validatedFields = ProUserSchema.safeParse(values);
   if (!validatedFields.success) {
     throw new Error("Invalid fields!");

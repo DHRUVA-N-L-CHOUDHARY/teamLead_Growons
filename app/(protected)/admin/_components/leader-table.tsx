@@ -42,12 +42,26 @@ const LeaderTable = async ({
       name: true,
       email: true,
       number: true,
-      password: true,
-      teamId: true,
+      password: true
     },
     skip: (currentPage - 1) * pageSize,
     take: pageSize,
   });
+
+  // for each leader get team details from team table and add to leader object
+  for (let i = 0; i < leaders.length; i++) {
+    const leader = leaders[i];
+    const team = await db.team.findFirst({
+      where: { leaderId: leader.id },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    leaders[i].teamId = team?.id;
+  }
+
+  console.log(leaders)
 
   const teams = await db.team.findMany({
     select: {

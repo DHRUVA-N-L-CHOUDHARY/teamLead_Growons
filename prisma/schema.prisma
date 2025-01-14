@@ -68,7 +68,22 @@ model User {
   WalletFlow        WalletFlow[]
   Support           Support[]
   Settings          Settings[]
+  teamMembers       TeamMember[]       
 }
+
+// model Team {
+//   id           String   @id @default(uuid()) @map("_id")
+//   name         String
+//   leaderId     String
+//   leader       User     @relation(fields: [leaderId], references: [id])
+//   refCode      String   @unique
+//   amount_limit Int
+//   products     Json
+//   createdAt    DateTime @default(now()) @map("created_at")
+//   updatedAt    DateTime @updatedAt
+// }
+
+// changing too....
 
 model Team {
   id           String   @id @default(uuid()) @map("_id")
@@ -80,7 +95,23 @@ model Team {
   products     Json
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt
+
+  // Explicit relationship for members
+  members      TeamMember[]  // Added explicit relation for members
 }
+
+model TeamMember {
+  id        String   @id @default(uuid()) @map("_id")
+  teamId    String
+  userId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Optional: Define if the user is a leader in this team (if needed for more complex setups)
+  isLeader  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+}
+
 
 model Settings {
   id                String   @id @default(uuid()) @map("_id")
