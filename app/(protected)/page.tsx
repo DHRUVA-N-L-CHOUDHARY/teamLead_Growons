@@ -7,6 +7,7 @@ import SupportLink from "./_components/support-link";
 import AdminAutomateOrders from "./_components/admin-automateOrders";
 import AdminUpdateStocks from "./_components/update-stocks";
 import ManagePaymentMode from "./_components/mange-payments-mode";
+import TeamCard from "./_components/team--card";
 export default async function Home() {
   const session = await auth();
 
@@ -29,6 +30,7 @@ export default async function Home() {
           {session?.user.role === "ADMIN" && <AdminUpdateStocks />}
           {session?.user.role === "ADMIN" && <SupportLink />}
           {session?.user.role === "ADMIN" && <ManagePaymentMode />}
+          {session?.user.role === "LEADER" && <TeamCard/>}
         </div>
       </div>
     </section>
