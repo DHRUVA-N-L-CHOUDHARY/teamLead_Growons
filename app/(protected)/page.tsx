@@ -7,7 +7,7 @@ import SupportLink from "./_components/support-link";
 import AdminAutomateOrders from "./_components/admin-automateOrders";
 import AdminUpdateStocks from "./_components/update-stocks";
 import ManagePaymentMode from "./_components/mange-payments-mode";
-import TeamCard from "./_components/team--card";
+import TeamCard from "./_components/team-card";
 import TeamWallet from "./_components/team-wallet";
 import TeamProductsCard from "./_components/team-products";
 export default async function Home() {

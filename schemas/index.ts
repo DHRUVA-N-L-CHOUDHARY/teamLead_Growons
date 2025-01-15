@@ -393,7 +393,7 @@ export const ProductSchema = z.object({
 
 export const AddTeamSchema = z.object({
   teamName: z.string().min(1, "Team name is required"),
-  teamLeader: z.string().optional(),
+  teamLeader: z.string().min(1, "Team Leader is required"),
   amount: z.coerce.number(),
   products: z
     .array(

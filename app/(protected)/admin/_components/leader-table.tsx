@@ -42,33 +42,38 @@ const LeaderTable = async ({
       name: true,
       email: true,
       number: true,
-      password: true
+      teamId : true
     },
     skip: (currentPage - 1) * pageSize,
     take: pageSize,
   });
 
-  // for each leader get team details from team table and add to leader object
-  for (let i = 0; i < leaders.length; i++) {
-    const leader = leaders[i];
-    const team = await db.team.findFirst({
-      where: { leaderId: leader.id },
-      select: {
-        id: true,
-        name: true,
-      },
-    });
-    leaders[i].teamId = team?.id;
+  const leadersWithTeamDetails = [];
+  
+  if (leaders.length !== 0) {
+    for (let i = 0; i < leaders.length; i++) {
+      const leader = leaders[i];
+  
+      const teamDetails = leader.teamId
+        ? await db.team.findUnique({
+            where: { id: leader.teamId },
+            select: { name: true },
+          })
+        : null;
+  
+      leadersWithTeamDetails.push({
+        id: leader.id,
+        name: leader.name,
+        number: leader.number,
+        email: leader.email,
+        teamId: leader.teamId,
+        teamName: teamDetails?.name || "No Team Assigned",
+      });
+    }
   }
 
-  console.log(leaders)
-
-  const teams = await db.team.findMany({
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  console.log(leadersWithTeamDetails);
+  
 
   revalidatePath("/admin/leader");
 
@@ -95,24 +100,13 @@ const LeaderTable = async ({
         )}
 
         <TableBody>
-          {leaders.map((leader) => (
+          {leadersWithTeamDetails.map((leader) => (
             <TableRow key={leader.id}>
               <TableCell className="capitalize">{leader.name}</TableCell>
               <TableCell>{leader.email}</TableCell>
               <TableCell>{leader.number}</TableCell>
               <TableCell>
-                <Select defaultValue={leader.teamId || ""}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {leader.teamName}
               </TableCell>
             </TableRow>
           ))}

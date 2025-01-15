@@ -58,7 +58,7 @@ const TeamForm = ({ users, products }: TeamProps) => {
     },
   });
 
-  const { fields, append } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     name: "products",
     control: form.control,
   });
@@ -69,7 +69,7 @@ const TeamForm = ({ users, products }: TeamProps) => {
       toast.error("All selected products must have a name");
       return;
     }
-  
+
     startTransition(() => {
       createTeam(values).then((data) => {
         if (data?.success) {
@@ -123,6 +123,7 @@ const TeamForm = ({ users, products }: TeamProps) => {
                 <FormControl>
                   <Select
                     onValueChange={field.onChange}
+                    disabled={isPending}
                     defaultValue={field.value}
                   >
                     <SelectTrigger>
@@ -245,51 +246,63 @@ const TeamForm = ({ users, products }: TeamProps) => {
                 </FormItem>
               )}
             />
+            <div className="flex justify-start mt-2">
+              <Button
+                type="button"
+                variant={"ghost"}
+                onClick={() => remove(index)}
+                disabled={isPending}
+              >
+                Remove Product
+              </Button>
+            </div>
           </div>
         ))}
         <div>
-                            <FormField
-                              control={form.control}
-                              name="products"
-                              render={() => (
-                                <Button
-                                  type="button"
-                                  disabled={isPending}
-                                  className={`mb-2`}
-                                >
-                                  <div className="flex items-center gap-x-3 mt-2 mb-2">
-                                    <label
-                                      htmlFor="Products"
-                                      className={`text-sm text-[7E8DA0] cursor-pointer focus:outline-none focus:underline`}
-                                      tabIndex={0}
-                                      onClick={() => {
-                                        const lastProduct =
-                                          form.getValues().products[fields.length - 1];
-        
-                                        if (
-                                          lastProduct &&
-                                          lastProduct.name.trim() !== ""
-                                        ) {
-                                          append({
-                                            name: "",
-                                            minProduct: 0,
-                                            maxProduct: 0,
-                                            price: 0,
-                                          });
-                                        } else {
-                                          toast.error(
-                                            "Please fill in the previous product before adding a new one."
-                                          );
-                                        }
-                                      }}
-                                    >
-                                      Add Product
-                                    </label>
-                                  </div>
-                                </Button>
-                              )}
-                            />
-                          </div>
+          <FormField
+            control={form.control}
+            name="products"
+            render={() => (
+              <Button type="button" disabled={isPending} className={`mb-2`}>
+                <div className="flex items-center gap-x-3 mt-2 mb-2">
+                  <label
+                    htmlFor="Products"
+                    className={`text-sm text-[7E8DA0] cursor-pointer focus:outline-none focus:underline`}
+                    tabIndex={0}
+                    onClick={() => {
+                      if (fields.length === 0) {
+                        append({
+                          name: "",
+                          minProduct: 0,
+                          maxProduct: 0,
+                          price: 0,
+                        });
+                      } else {
+                        const lastProduct =
+                              form.getValues().products[fields.length - 1];
+
+                        if (lastProduct && lastProduct.name.trim() !== "") {
+                          append({
+                            name: "",
+                            minProduct: 0,
+                            maxProduct: 0,
+                            price: 0,
+                          });
+                        } else {
+                          toast.error(
+                            "Please fill in the previous product before adding a new one."
+                          );
+                        }
+                      }
+                    }}
+                  >
+                    Add Product
+                  </label>
+                </div>
+              </Button>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="teamDescription"

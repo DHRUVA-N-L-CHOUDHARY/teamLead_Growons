@@ -13,22 +13,21 @@ export async function createTeam(values: z.infer<typeof AddTeamSchema>) {
 
     const leader = await getUserById(values.teamLeader);
 
-    
     if (!leader) {
       return { error: "Selected team leader not found" };
     }
 
     // Generate a unique reference code for the team
     const refCode = generateRandomCode(); // You'll need to implement this utility function
-    
-    // Format products data for storage
-    const formattedProducts = values?.products.map(product => ({
-      name: product.name,
-      minProduct: product.minProduct,
-      maxProduct: product.maxProduct,
-      price: product.price
-    }));
 
+    // Format products data for storage
+    const formattedProducts =
+      values.products?.map((product) => ({
+        name: product.name,
+        minProduct: product.minProduct,
+        maxProduct: product.maxProduct,
+        price: product.price,
+      })) || [];
 
     // Create the team
     const team = await db.team.create({
@@ -45,41 +44,41 @@ export async function createTeam(values: z.infer<typeof AddTeamSchema>) {
     await db.teamMember.create({
       data: {
         teamId: team.id,
-        userId: values.teamLeader, // Add the leader to the team as a member
+        userId: values.teamLeader,
       },
     });
 
     // Update products to include this team
-    for (const product of values.products) {
-      await db.product.updateMany({
-        where: {
-          productName: product.name,
-        },
-        data: {
-          teamIds: {
-            push: team.id,
+    if (values.products && values.products.length > 0) {
+      for (const product of values.products) {
+        await db.product.updateMany({
+          where: {
+            productName: product.name,
           },
-        },
-      });
+          data: {
+            teamIds: {
+              push: team.id,
+            },
+          },
+        });
+      }
     }
 
-    // Optionally update the user's role to LEADER if not already
     if (leader.role !== "LEADER") {
       await db.user.update({
         where: { id: values.teamLeader },
-        data: { role: "LEADER" },
+        data: { role: "LEADER", teamId: team.id },
       });
     }
 
     revalidatePath("/teams");
     return { success: "Team created successfully" };
-
   } catch (error) {
     console.error("TEAM_CREATION_ERROR", error);
     if (error instanceof z.ZodError) {
       return { error: "Invalid form data. Please check your inputs." };
     }
-    
+
     if (error instanceof Error) {
       if (error.message.includes("Unique constraint")) {
         return { error: "Team name or reference code already exists" };

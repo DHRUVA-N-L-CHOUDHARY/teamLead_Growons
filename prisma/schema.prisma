@@ -71,19 +71,6 @@ model User {
   teamMembers       TeamMember[]       
 }
 
-// model Team {
-//   id           String   @id @default(uuid()) @map("_id")
-//   name         String
-//   leaderId     String
-//   leader       User     @relation(fields: [leaderId], references: [id])
-//   refCode      String   @unique
-//   amount_limit Int
-//   products     Json
-//   createdAt    DateTime @default(now()) @map("created_at")
-//   updatedAt    DateTime @updatedAt
-// }
-
-// changing too....
 
 model Team {
   id           String   @id @default(uuid()) @map("_id")

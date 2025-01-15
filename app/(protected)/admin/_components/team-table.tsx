@@ -84,7 +84,7 @@ const TeamTable = async ({
                 </div>
               </TableCell>
               <TableCell>
-                <ViewProductsDialog products={team.products} />
+                <ViewProductsDialog products= {JSON.parse(JSON.stringify(team.products))} />
               </TableCell>
               <TableCell>
                 <TeamEdit teamId={team.id} />
