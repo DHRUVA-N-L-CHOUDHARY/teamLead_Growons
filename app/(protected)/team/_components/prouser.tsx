@@ -26,30 +26,23 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import DowngradeToUser from "./downgrade";
 import { addProUser } from "@/actions/user-pro";
+import { ProUserSchema } from "@/schemas";
 
-// Updated schema to parse the amount to a number
-const ProUserSchema = z.object({
-  userId: z.string(),
-  amount: z.string().transform((val, ctx) => {
-    const parsed = parseFloat(val);
-    if (isNaN(parsed)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Amount must be a valid number",
-      });
-      return z.NEVER;
-    }
-    return parsed;
-  }).refine((val) => val >= 0, "Amount must be positive")
-});
+
+
+interface Product {
+  name: string;
+  minProduct: number;
+  maxProduct: number;
+  price: number;
+}
 
 type ProUserProps = {
   userId: string;
-  role: "PRO" | "BLOCKED" | "ADMIN" | "USER";
-  products:any;
+  role: "PRO" | "BLOCKED" | "ADMIN" | "USER" | "LEADER";
 };
 
-const ProUser = ({ userId, role, products }: ProUserProps) => {
+const ProUser = ({ userId, role}: ProUserProps) => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
 
@@ -57,13 +50,12 @@ const ProUser = ({ userId, role, products }: ProUserProps) => {
     resolver: zodResolver(ProUserSchema),
     defaultValues: {
       userId: userId,
-      amount: "0"
+      amount: 0
     },
   });
 
   const onSubmit = (values: z.infer<typeof ProUserSchema>) => {
     startTransition(() => {
-        values.products = products.products;
       addProUser(values).then((data) => {
         if (data?.error) {
           setError(data.error);

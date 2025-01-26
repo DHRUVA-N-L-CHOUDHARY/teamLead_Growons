@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { FormError } from "@/components/shared/form-error";
-import BlockUser from "../../_components/block-user";
+import BlockUser from "../../../admin/_components/block-user";
 import { editUser } from "@/actions/user";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -44,7 +44,7 @@ type User = {
   password: string;
   totalMoney: number;
   paymentType: "MANUAL" | "PAYMENT_GATEWAY";
-  role: "ADMIN" | "PRO" | "BLOCKED" | "USER";
+  role: "ADMIN" | "PRO" | "BLOCKED" | "USER" | "LEADER";
   createdAt: Date;
 };
 

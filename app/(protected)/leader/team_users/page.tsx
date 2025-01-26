@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/table";
 import PaginationBar from "../../money/_components/PaginationBar";
 import { revalidatePath } from "next/cache";
-import BalanceCell from "../_components/Balance-cell";
-import ProUser from "../_components/upgrade-to-pro";
+import BalanceCell from "../../admin/_components/Balance-cell";
+import ProUser from "../../admin/_components/upgrade-to-pro";
 import TopBar from "../../_components/Topbar";
 import EditUser from "./_components/edit-user";
 import Search from "@/components/shared/search";

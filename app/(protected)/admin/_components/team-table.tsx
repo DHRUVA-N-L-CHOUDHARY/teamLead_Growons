@@ -16,6 +16,7 @@ import CopyButton from "@/components/shared/copy-button";
 import TeamEdit from "./team-edit";
 import ViewProductsDialog from "./view-products";
 import TeamRemove from "./team-remove";
+import Search from "@/components/shared/search";
 
 export const revalidate = 3600;
 
@@ -48,6 +49,9 @@ const TeamTable = async ({
 
   return (
     <>
+    <div className="p-1 m-1 w-[100%] flex justify-end">
+        <Search fileName="team-listing" />
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -75,7 +79,7 @@ const TeamTable = async ({
             <TableRow key={team.id}>
               <TableCell className="capitalize">{team.name}</TableCell>
               <TableCell className="capitalize">
-                {team.leaderId || "Admin"}
+                {team.leader.name || "Admin"}
               </TableCell>
               <TableCell>
                 <div className="flex items-center">

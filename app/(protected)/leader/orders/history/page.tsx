@@ -14,7 +14,7 @@ import PaginationBar from "../../../money/_components/PaginationBar";
 import TopBar from "../../../_components/Topbar";
 import ReasonDialog from "@/components/shared/ReasonDialog";
 import BadgeStatus from "@/app/(protected)/money/_components/BadgeStatus";
-import FileDialog from "../../_components/file-dialog";
+import FileDialog from "../../../admin/_components/file-dialog";
 import ViewProducts from "@/app/(protected)/_components/view-products";
 import GetName from "../_components/get-name";
 import Search from "@/components/shared/search";

@@ -278,8 +278,9 @@ const TeamForm = ({ users, products }: TeamProps) => {
                           price: 0,
                         });
                       } else {
-                        const lastProduct =
-                              form.getValues().products[fields.length - 1];
+                        const products = form.getValues().products;
+                        if(products && products.length > 0) {
+                        const lastProduct = products[fields.length - 1];
 
                         if (lastProduct && lastProduct.name.trim() !== "") {
                           append({
@@ -293,6 +294,7 @@ const TeamForm = ({ users, products }: TeamProps) => {
                             "Please fill in the previous product before adding a new one."
                           );
                         }
+                      }
                       }
                     }}
                   >

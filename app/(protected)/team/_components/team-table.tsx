@@ -17,6 +17,7 @@ import ProUser from "./prouser";
 
 import { Button } from "@/components/ui/button";
 import { removeMember } from "@/actions/admin-editTeam";
+import { Product } from "@prisma/client";
 
 interface TeamMembersTableProps {
   teamId: string;
@@ -68,23 +69,8 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
     },
     skip: (currentPage - 1) * pageSize,
     take: pageSize,
-  });
-
-//   const products = await db.product.findMany({
-//     orderBy: {
-//       createdAt: "desc",
-//     },
-//   });
-    // find team products here
-    const products = await db.team.findFirst({
-        where: {
-            id: teamId
-        },
-        select: {
-            products: true
-        }
-    })
-
+  });  
+  
   revalidatePath(`/team/${teamId}`);
 
   return (
@@ -132,7 +118,7 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
                   <ProUser
                     userId={member.user.id}
                     role={member.user.role}
-                    products={products}
+                    
                   />
                 </TableCell>
               )}

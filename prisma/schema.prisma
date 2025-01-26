@@ -97,6 +97,8 @@ model TeamMember {
   // Optional: Define if the user is a leader in this team (if needed for more complex setups)
   isLeader  Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([teamId, userId]) 
 }
 
 
