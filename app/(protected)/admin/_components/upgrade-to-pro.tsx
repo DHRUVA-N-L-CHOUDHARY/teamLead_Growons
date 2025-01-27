@@ -37,7 +37,7 @@ import { addProUser } from "@/actions/user-pro";
 
 type ProUserProps = {
   userId: string;
-  role: "PRO" | "BLOCKED" | "ADMIN" | "USER";
+  role: "PRO" | "BLOCKED" | "ADMIN" | "USER" | "LEADER";
   products: any; // TODO: Define type for this.
 };
 

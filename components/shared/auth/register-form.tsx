@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import {
   Form,
   FormField,
@@ -17,6 +17,7 @@ import { RegisterSchema } from "@/schemas";
 import { FormError } from "@/components/shared/form-error";
 import CardWrapper from "./card-wrapper";
 import { FormSuccess } from "@/components/shared/form-success";
+import { useSearchParams } from "next/navigation";
 import { register } from "@/actions/register";
 import { useRouter } from "next/navigation";
 import TermsAndConditionsDialog from "./terms_conditions";
@@ -26,16 +27,20 @@ const RegisterForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  
+  const referralCode = searchParams.get("referral");
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       name: "",
       email: "",
-      password: "",
       number: "",
+      password: "",
       confirmPassword: "",
+      referralCode: referralCode || "",
     },
   });
 
@@ -54,6 +59,7 @@ const RegisterForm = () => {
       });
     });
   }
+
   return (
     <CardWrapper
       headerLabel="Create an account"
@@ -152,6 +158,26 @@ const RegisterForm = () => {
                 </FormItem>
               )}
             />
+            
+            {/* Referral Code Field */}
+            {referralCode && (
+              <FormField
+                control={form.control}
+                name="referralCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Referral Code"
+                        disabled={isPending}
+                        value={referralCode}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
           <FormError message={error} />
           <FormSuccess message={success} />

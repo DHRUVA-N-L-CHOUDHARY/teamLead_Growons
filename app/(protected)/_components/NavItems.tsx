@@ -1,10 +1,20 @@
 import React from "react";
 import Link from "next/link";
-import { AdminSidebar, SidebarItems, SupportPolicies } from "./NavBarItems";
+import { AdminSidebar, LeaderSidebar, SidebarItems, SupportPolicies } from "./NavBarItems";
 import { auth } from "@/auth";
+import { db } from "@/lib/db";
 
 const NavItems = async () => {
   const session = await auth();
+  // find team id with current user
+  const team = await db.team.findFirst({
+    where: {
+      leaderId: session?.user?.id,
+    },
+    select: {
+      id: true,
+    },
+  })
   return (
     <ul className="space-y-2 font-medium">
       <li>
@@ -19,6 +29,7 @@ const NavItems = async () => {
         <></>
       ) : (
         <>
+        
           <li>
             <Link
               href={`/money/record/${session?.user?.id}`}
@@ -58,6 +69,7 @@ const NavItems = async () => {
               <span className="flex-1 ms-3 whitespace-nowrap">Wallet flow</span>
             </Link>
           </li>
+          {session?.user.role === "LEADER" && team && <LeaderSidebar teamId={team.id} />}
           <li>
             <Link
               href={`/feedback/reply/${session?.user.id}`}
@@ -79,7 +91,10 @@ const NavItems = async () => {
           <SupportPolicies />
         </>
       )}
+      
       {session?.user.role === "ADMIN" && <AdminSidebar />}
+      
+
     </ul>
   );
 };
