@@ -3,13 +3,12 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import TeamMembersTable from "../_components/team-table";
-import TeamWallet from "../_components/team-wallet";
 
 interface TeamPageProps {
   params: {
     teamId: string;
   };
-  searchParams: { page: string };
+  searchParams: { page: string; query: string };
 }
 
 const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
@@ -28,24 +27,18 @@ const TeamPage = async ({ params, searchParams }: TeamPageProps) => {
     select: {
       amount_limit: true,
       products: true,
-      }
+    }
   });
-
-  console.log(team);
 
   if (!team) {
     redirect("/"); // or wherever you want to redirect unauthorized users
   }
 
-  
-
   return (
     <div className="p-6">
-      
       <TeamMembersTable teamId={params.teamId} searchParams={searchParams} />
     </div>
   );
 };
 
 export default TeamPage;
-

@@ -70,7 +70,7 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
     skip: (currentPage - 1) * pageSize,
     take: pageSize,
   });  
-  
+  console.log(teamMembers)
   revalidatePath(`/team/${teamId}`);
 
   return (
@@ -87,7 +87,7 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
             <TableHead>Joined On</TableHead>
             <TableHead>Actions</TableHead>
             <TableHead>
-              <Search fileName="team-members" />
+              <Search fileName="leader-team" />
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -108,7 +108,7 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
             >
               <TableCell className="capitalize">{member.user.name}</TableCell>
               <TableCell>{member.user.email}</TableCell>
-              <TableCell>{member.isLeader ? "Leader" : "Member"}</TableCell>
+              <TableCell>{member.user.role==="LEADER" ? "Leader" : "Member"}</TableCell>
               <TableCell>{member.createdAt.toDateString()}</TableCell>
               {member.user.role!=="LEADER" &&  <TableCell>
                 <RemoveMemberButton teamId={teamId} userId={member.user.id} />
