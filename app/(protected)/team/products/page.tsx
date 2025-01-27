@@ -13,23 +13,28 @@ const Page = async () => {
   });
 
   // Fetch the products associated with the user's team
-  const products = await db.team.findFirst({
+  const productsData = await db.team.findFirst({
     where: {
       id: team?.teamId,
     },
     select: {
-      products: true,
+      products: true, // `products` is stored as JSON
     },
   });
+
+  // Safely parse the products into an array
+  const products = Array.isArray(productsData?.products)
+    ? productsData.products
+    : [];
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold text-center mb-8">Team Products</h1>
       
       {/* Check if products exist */}
-      {products?.products?.length > 0 ? (
+      {products?.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.products.map((product: any) => (
+          {products.map((product: any) => (
             <div key={product.name} className="border border-gray-200 rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow">
               <div className="text-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">{product.name}</h2>

@@ -9,8 +9,9 @@ type CopyButtonProps = {
 };
 
 const CopyButton: React.FC<CopyButtonProps> = ({ text }) => {
+  const apiUrl = process.env.NEXT_PUBLIC_REFERAL_BASE_URL;
   const handleCopy = () => {
-    const textToCopy = `http://localhost:3000/auth/signup?referral=${text}`;
+    const textToCopy = `${apiUrl}/auth/signup?referral=${text}`;
 
     try {
       navigator.clipboard.writeText(textToCopy).then((data) => {

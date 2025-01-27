@@ -26,10 +26,10 @@ interface TeamCardProps {
       name: string;
     };
   };
-  userRole: UserRole;
+  userRole : any;
 }
 
-const TeamCard = ({ team, userRole }: TeamCardProps) => {
+const TeamCard = ({ team , userRole }: TeamCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const isLeader = userRole === "LEADER";
   

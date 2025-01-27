@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import TeamCard from "./_components/team-card";
 import Link from "next/link";
+import { UserRole } from "@prisma/client";
 
 async function getTeams(userId: string) {
   try {
@@ -23,11 +24,11 @@ async function getTeams(userId: string) {
 
     return {
       teams: leaderTeams,
-      userRole: user?.role
+      userRole: user?.role ?? "USER"
     };
   } catch (error) {
     console.error("Error fetching teams:", error);
-    return { teams: [], userRole: null };
+    return { teams: [], userRole: UserRole };
   }
 }
 
@@ -54,7 +55,7 @@ export default async function TeamsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team) => (
             <Link key={team.id} href={`/teams/${team.id}`}>
-              <TeamCard team={team} userRole={userRole} />
+              <TeamCard team={team} userRole = {userRole} />
             </Link>
           ))}
         </div>
