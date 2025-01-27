@@ -5,12 +5,13 @@ import React from "react";
 import { Copy } from "lucide-react";
 import { db } from "@/lib/db";
 import { toast } from "sonner";
-import CopyButton from "@/components/shared/copy-button";
+import CopyButton from "@/components/shared/copy-referral";
+
+
 
 const TeamCard = async () => {
   const session = await auth();
   
-  // Fetch team details where current user is leader
   const team = await db.team.findFirst({
     where: {
       leaderId: session?.user?.id

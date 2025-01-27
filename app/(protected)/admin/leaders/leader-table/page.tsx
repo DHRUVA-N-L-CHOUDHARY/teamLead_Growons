@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import TopBar from "@/app/(protected)/_components/Topbar";
 
-const LeadersPage = ({ searchParams }: { searchParams: { page: string } }) => {
+const LeadersPage = ({ searchParams }: { searchParams: { page: string, query: string } }) => {
   return <>
   <div className="hidden md:block">
     <TopBar title="Team Records" />

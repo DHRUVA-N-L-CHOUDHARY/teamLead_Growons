@@ -5,7 +5,6 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import authConfig from "@/auth.config";
 import { getUserById } from "@/data/user";
-
 export const {
   handlers: { GET, POST },
   auth,
@@ -35,7 +34,6 @@ export const {
 
       token.role = existingUser.role;
       token.amount = existingUser.totalMoney;
-
       return token;
     },
   },

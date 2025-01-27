@@ -40,12 +40,12 @@ export const RegisterSchema = z
     confirmPassword: z.string().min(6, {
       message: "Minimum of 6 characters required",
     }),
+    referralCode: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
-
 export const EditUserSchema = z.object({
   id: z.string().uuid(),
   name: z
