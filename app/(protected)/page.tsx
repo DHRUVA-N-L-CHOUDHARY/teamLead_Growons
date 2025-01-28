@@ -34,7 +34,6 @@ export default async function Home() {
           {session?.user.role === "ADMIN" && <ManagePaymentMode />}
           {session?.user.role === "LEADER" && <TeamCard/>}
           {session?.user.role === "LEADER" && <TeamWallet/> }
-          {session?.user.role !== "ADMIN" && <TeamProductsCard/>}
         </div>
       </div>
     </section>

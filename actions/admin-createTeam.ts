@@ -45,6 +45,7 @@ export async function createTeam(values: z.infer<typeof AddTeamSchema>) {
       data: {
         teamId: team.id,
         userId: values.teamLeader,
+        isLeader:true
       },
     });
 

@@ -360,7 +360,7 @@ const AdminAnalytics = () => {
   );
 };
 
-const ProSidebar = () => {
+export const ProSidebar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -413,13 +413,16 @@ const ProSidebar = () => {
   );
 };
 
-export const LeaderSidebar = ({teamId}:{teamId:string}) => {
+export const LeaderSidebar = () => {
   return (<li>
   <Link
-  href={`/team/${teamId}`}
+  href={`/team/products`}
     className="flex items-center p-2 text-gray-900 rounded-lg  hover:bg-gray-100 "
   >
-    <span className="flex-1 ms-3 whitespace-nowrap">My Team</span>
+    <span className="flex-1 ms-3 whitespace-nowrap">Team Products</span>
   </Link>
 </li>)
 }
+
+
+

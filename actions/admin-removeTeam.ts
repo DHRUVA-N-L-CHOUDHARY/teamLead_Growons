@@ -9,10 +9,8 @@ export const deleteTeam = async (teamId: string) => {
       where: { id: teamId },
     });
 
-    // find user_id of leader od this team
     const leaderId = team?.leaderId;
 
-    // find user using leaderId and modify role from "LEADER" to "USER
     await db.user.update({
       where: {
         id: leaderId,
