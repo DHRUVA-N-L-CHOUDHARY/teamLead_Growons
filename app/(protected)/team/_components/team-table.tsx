@@ -17,33 +17,27 @@ import ProUser from "./prouser";
 
 import { Button } from "@/components/ui/button";
 import { removeMember } from "@/actions/admin-editTeam";
-import { Product } from "@prisma/client";
 
 interface TeamMembersTableProps {
   teamId: string;
   searchParams: { page: string };
-  
 }
 
 const RemoveMemberButton = ({ teamId, userId }: { teamId: string; userId: string }) => {
-    const handleRemove = async () => {
-      'use server'
-      await removeMember(teamId, userId);
-      revalidatePath(`/team/${teamId}`);
-    };
-  
-    return (
-      <form action={handleRemove}>
-        <Button 
-          type="submit"
-          variant="destructive" 
-          size="sm"
-        >
-          Remove
-        </Button>
-      </form>
-    );
+  const handleRemove = async () => {
+    "use server";
+    await removeMember(teamId, userId);
+    revalidatePath(`/team/${teamId}`);
   };
+
+  return (
+    <form action={handleRemove}>
+      <Button type="submit" variant="destructive" size="sm">
+        Remove
+      </Button>
+    </form>
+  );
+};
 
 const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps) => {
   const currentPage = parseInt(searchParams.page) || 1;
@@ -51,26 +45,39 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
 
   const totalItemCount = await db.teamMember.count({
     where: {
-      teamId: teamId
-    }
+      teamId: teamId,
+    },
   });
 
   const totalPages = Math.ceil(totalItemCount / pageSize);
 
+  // Fetch products from the Team model
+  const team = await db.team.findUnique({
+    where: {
+      id: teamId,
+    },
+    select: {
+      products: true, // Fetch the products field
+    },
+  });
+
+  const products = team?.products || []; // Ensure products is an array
+
+  // Fetch team members with pagination
   const teamMembers = await db.teamMember.findMany({
     where: {
-      teamId: teamId
+      teamId: teamId,
     },
     include: {
-      user: true
+      user: true,
     },
     orderBy: {
       createdAt: "desc",
     },
     skip: (currentPage - 1) * pageSize,
     take: pageSize,
-  });  
-  console.log(teamMembers)
+  });
+
   revalidatePath(`/team/${teamId}`);
 
   return (
@@ -102,26 +109,31 @@ const TeamMembersTable = async ({ teamId, searchParams }: TeamMembersTableProps)
         )}
         <TableBody>
           {teamMembers.map((member) => (
-            <TableRow 
+            <TableRow
               key={member.id}
               className={member.user.role === "BLOCKED" ? "text-red-500" : ""}
             >
               <TableCell className="capitalize">{member.user.name}</TableCell>
               <TableCell>{member.user.email}</TableCell>
-              <TableCell>{member.user.role==="LEADER" ? "Leader" : "Member"}</TableCell>
+              <TableCell>
+                {member.user.role === "LEADER" ? "Leader" : member.user.role==="PRO"?"Pro": "Member"}
+              </TableCell>
               <TableCell>{member.createdAt.toDateString()}</TableCell>
-              {member.user.role!=="LEADER" &&  <TableCell>
-                <RemoveMemberButton teamId={teamId} userId={member.user.id} />
-              </TableCell>}
-              {member.user.role !== "BLOCKED" && member.user.role!== "LEADER" && (
+              {member.user.role !== "LEADER" && (
                 <TableCell>
-                  <ProUser
-                    userId={member.user.id}
-                    role={member.user.role}
-                    
-                  />
+                  <RemoveMemberButton teamId={teamId} userId={member.user.id} />
                 </TableCell>
               )}
+              {member.user.role !== "BLOCKED" &&
+                member.user.role !== "LEADER" && (
+                  <TableCell>
+                    <ProUser
+                      userId={member.user.id}
+                      role={member.user.role}
+                      products_from_team={products}
+                    />
+                  </TableCell>
+                )}
             </TableRow>
           ))}
         </TableBody>

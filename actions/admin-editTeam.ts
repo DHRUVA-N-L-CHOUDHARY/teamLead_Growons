@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { UserRole } from "@prisma/client";
+import { TeamMember, UserRole } from "@prisma/client";
 
 // Fetch team details along with admin check
 export async function getTeamDetails(teamId: string, userId: string) {
@@ -133,7 +133,7 @@ export async function saveTeamDetails(teamId: string, data: FormData) {
 export async function addMember(teamId: string, email: string) {
   try {
     const user = await db.user.findUnique({ where: { email } });
-   
+
     if (!user) {
       throw new Error(`User with email "${email}" not found.`);
     }
@@ -146,6 +146,43 @@ export async function addMember(teamId: string, email: string) {
       throw new Error(`User with email "${email}" is already a team member.`);
     }
 
+    const teamMembers = await db.teamMember.findMany({
+      where: { teamId },
+    });
+
+    const leader = teamMembers.find((member) => member.isLeader);
+    console.log("Leader - ", leader);
+
+    // Fetch all ProUsers in the team
+    const proUsers = await db.proUser.findMany({
+      where: {
+        userId: {
+          in: teamMembers.map((member) => member.userId),
+        },
+      },
+    });
+
+    // Calculate the total amount limit of all ProUsers
+    const totalAmount = proUsers.reduce((sum, proUser) => sum + proUser.amount_limit, 0);
+
+    // Fetch the team's wallet_money (amount_limit)
+    const team = await db.team.findUnique({
+      where: { id: teamId },
+    });
+
+    if (!team) {
+      throw new Error(`Team with id "${teamId}" not found.`);
+    }
+
+    console.log("Total amount - ", totalAmount);
+    console.log("Team amount limit - ", team.amount_limit); 
+
+    // Check if the total amount exceeds the team's wallet_money
+    if (totalAmount > team.amount_limit) {
+      throw new Error(`Total amount limit of ProUsers exceeds the team's wallet money.`);
+    }
+
+    // Add the user as a team member
     await db.teamMember.create({
       data: {
         teamId,
@@ -153,46 +190,71 @@ export async function addMember(teamId: string, email: string) {
         isLeader: false,
       },
     });
+    await db.user.update({
+      where: { id: user.id },
+      data:{teamId:teamId}
+    })
 
-
-    return { message: `User with email "${email}" added to the team.`, success:true };
+    return { message: `User with email "${email}" added to the team.`, success: true };
   } catch (error: any) {
     console.error("Error adding member:", error);
     throw new Error(error.message);
   }
 }
-
 // Remove a member from the team
 export async function removeMember(teamId: string, userId: string) {
   try {
+    // Find the member in the database
     const member = await db.teamMember.findFirst({
-        where: {
-          userId: userId,
-          teamId: teamId,
-        },
-      });
-      
+      where: {
+        userId: userId,
+        teamId: teamId,
+      },
+    });
 
     if (!member) {
       throw new Error(`Member with ID "${userId}" not found in the team.`);
     }
 
+    // Check if the member is the team leader
     if (member.isLeader) {
       throw new Error("Cannot remove the team leader.");
     }
-    await db.teamMember.deleteMany({
+
+    const user = await db.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error(`User with ID "${userId}" not found.`);
+    }
+
+    if (user.role !== UserRole.USER && user.role !== UserRole.LEADER && user.role !== UserRole.PRO) {
+      throw new Error(
+        `Cannot remove user with unknown role "${user.role}".`
+      );
+    }
+    if(user.role === UserRole.PRO){
+      await db.proUser.deleteMany({
         where: {
-          teamId: teamId,
           userId: userId,
         },
       });
-      
+    }
 
-    return { message: `Member with ID "${userId}" removed from the team.`, success:true };
+    await db.teamMember.deleteMany({
+      where: {
+        teamId: teamId,
+        userId: userId,
+      },
+    });
+    console.log(`Member with ID "${userId}" (${user.role}) removed from the team.`);
+    return {
+      message: `Member with ID "${userId}" (${user.role}) removed from the team.`,
+      success: true,
+    };
   } catch (error: any) {
     console.error("Error removing member:", error);
-    return {success:false, message: error.message};
-    throw new Error(error.message);
-
+    return { success: false, message: error.message };
   }
 }

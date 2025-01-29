@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useTransition, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,8 +29,6 @@ import DowngradeToUser from "./downgrade";
 import { addProUser } from "@/actions/user-pro";
 import { ProUserSchema } from "@/schemas";
 
-
-
 interface Product {
   name: string;
   minProduct: number;
@@ -40,28 +39,38 @@ interface Product {
 type ProUserProps = {
   userId: string;
   role: "PRO" | "BLOCKED" | "ADMIN" | "USER" | "LEADER";
+  products_from_team?: any;
 };
 
-const ProUser = ({ userId, role}: ProUserProps) => {
+const ProUser = ({ userId, role, products_from_team }: ProUserProps) => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
+  console.log("Products - ", products_from_team);
 
   const form = useForm<z.infer<typeof ProUserSchema>>({
     resolver: zodResolver(ProUserSchema),
     defaultValues: {
       userId: userId,
-      amount: 0
+      amount: 0,
     },
   });
 
+  const handleSubmitWrapper = (event: React.FormEvent<HTMLFormElement>) => {
+    
+    event.preventDefault();
+    onSubmit(form.getValues());
+  };
+
   const onSubmit = (values: z.infer<typeof ProUserSchema>) => {
+    values.products = products_from_team;
+    console.log("Submitting Values: ", values);
+
     startTransition(() => {
       addProUser(values).then((data) => {
         if (data?.error) {
           setError(data.error);
           toast.error(data.error);
-        }
-        if (data?.success) {
+        } else if (data?.success) {
           toast.success(data.success);
           form.reset();
         }
@@ -76,16 +85,16 @@ const ProUser = ({ userId, role}: ProUserProps) => {
       ) : (
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="default">Upgrade to pro</Button>
+            <Button variant="default">Upgrade to Pro</Button>
           </SheetTrigger>
           <SheetContent className="w-[300px] flex flex-col gap-6 bg-white overflow-auto md:w-full">
             <SheetTitle>
-              <p className="text-2xl font-bold">Upgrade to pro</p>
+              <p className="text-2xl font-bold">Upgrade to Pro</p>
             </SheetTitle>
             <Separator className="border border-gray-500" />
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={handleSubmitWrapper}
                 className="space-y-6"
               >
                 <div className="space-y-4">
@@ -94,7 +103,7 @@ const ProUser = ({ userId, role}: ProUserProps) => {
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Enter the amount limit</FormLabel>
+                        <FormLabel>Enter the Amount Limit</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -116,7 +125,7 @@ const ProUser = ({ userId, role}: ProUserProps) => {
                     disabled={isPending}
                     className="w-full"
                   >
-                    Upgrade to pro
+                    {isPending ? "Submitting..." : "Upgrade to Pro"}
                   </Button>
                 </SheetFooter>
               </form>
@@ -129,4 +138,3 @@ const ProUser = ({ userId, role}: ProUserProps) => {
 };
 
 export default ProUser;
-
